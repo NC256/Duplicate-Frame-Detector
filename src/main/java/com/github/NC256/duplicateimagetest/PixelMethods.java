@@ -159,7 +159,7 @@ public class PixelMethods {
      * @param exponent Exponent value from the gAMA chunk translated back into it's equation value
      */
     public static void powerLawPixelDiff (int[][] p1, int[][] p2, int[][] output, double exponent) {
-        // Might be worth it because the floating point math takes much longer than the absPixelDiff intger math
+        // Might be worth it because the floating point math takes much longer than the absPixelDiff integer math
         //IntStream.range(0,output.length).parallel().forEach(x -> powerLawPixelDiff(p1[x], p2[x], output[x]));
         double dp1, dp2;
         for (int r = 0; r < p1.length; r++) {
@@ -172,23 +172,24 @@ public class PixelMethods {
     }
 
     /**
-     * For all values in p1 and p2, fills output with the result of Math.abs(p1[i] - p2[i])
-     * @param p1 First picture
-     * @param p2 Second picture
+     * For all values in sp1 and sp2, fills output with the result of Math.abs(sp1[i] - sp2[i])
+     * @param sp1 First subpixels
+     * @param sp2 Second subpixels
      * @return Absolute difference values
      */
-    public static int[][] absPixelDiff (int[][] p1, int[][] p2){
+    public static int[][] absSubpixelDiff(int[][] sp1, int[][] sp2){
         // Parallel solution that might have too much overhead
-        //IntStream.range(0,output.length).parallel().forEach(x -> absPixelDiff(p1[x], p2[x], output[x]));
-        int[][] output = new int[p1.length][p1[0].length];
-        for (int r = 0; r < p1.length; r++) {
-            for (int c = 0; c < p1[r].length; c++) {
-                output[r][c] = Math.abs(p1[r][c] - p2[r][c]);
+        //IntStream.range(0,output.length).parallel().forEach(x -> absPixelDiff(sp1[x], sp2[x], output[x]));
+        int[][] output = new int[sp1.length][sp1[0].length];
+        for (int r = 0; r < sp1.length; r++) {
+            for (int c = 0; c < sp1[r].length; c++) {
+                output[r][c] = Math.abs(sp1[r][c] - sp2[r][c]);
             }
         }
         return output;
     }
 
+    //subpixels sized array in, pixel sized array out
     public static double[][] euclideanPixelDistance (int[][] sp1, int[][] sp2){
         IntPixel[][] ip1 = intsToPixels(sp1);
         IntPixel[][] ip2 = intsToPixels(sp2);
@@ -208,10 +209,10 @@ public class PixelMethods {
      * @param f2 Second PNG file
      * @return The subpixel values of the absolute difference image between f1 and f2
      */
-    public static int[][] absPixelDiff(File f1, File f2){
+    public static int[][] absSubpixelDiff(File f1, File f2){
         int[][] p1p = IOMethods.readAllSubpixels(new PngReader(f1));
         int[][] p2p = IOMethods.readAllSubpixels(new PngReader(f2));
-        return PixelMethods.absPixelDiff(p1p,p2p);
+        return PixelMethods.absSubpixelDiff(p1p,p2p);
     }
 
     /**
@@ -254,6 +255,7 @@ public class PixelMethods {
         if (tolerancePercentage == 0){
             return;
         }
+        //TODO change that hardcoded 65535 to a bitdepth method parameter
         int factor = (int) (65535 * tolerancePercentage * 0.01);
         for (int i = 0; i < rowSubPixels.length; i++) {
             if (rowSubPixels[i] < factor){

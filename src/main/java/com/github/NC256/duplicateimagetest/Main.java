@@ -31,8 +31,8 @@ public class Main {
         int[][] oklab1 = PixelMethods.sRGBToOkLab(pic1subpixels,16);
         int[][] oklab2 = PixelMethods.sRGBToOkLab(pic2subpixels,16);
 
-        int[][] srgbdif = PixelMethods.absPixelDiff(pic1subpixels,pic2subpixels);
-        int[][] oklabdiff = PixelMethods.absPixelDiff(oklab1,oklab2);
+        int[][] srgbdif = PixelMethods.absSubpixelDiff(pic1subpixels,pic2subpixels);
+        int[][] oklabdiff = PixelMethods.absSubpixelDiff(oklab1,oklab2);
 
         boolean anyNegatives = negativesToZeroes(oklabdiff);
         System.out.println("anyNegatives = " + anyNegatives);
