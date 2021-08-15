@@ -47,10 +47,10 @@ public class Main {
         double[][] srgbEuclidean = PixelMethods.euclideanPixelDistance(pic1subpixels,pic2subpixels);
         double[][] oklabEuclidean = PixelMethods.euclideanPixelDistance(oklab1,oklab2);
 
-        csvEuclideanThreshold("EuclideanDistance",new String[]{"sRGB", "OkLab"},srgbEuclidean, oklabEuclidean);
+        csvEuclideanThreshold("EuclideanDistance", new String[]{"sRGB", "OkLab"},srgbEuclidean, oklabEuclidean);
 
-        int[][] srgbEuclideanSubpixels = pixelsToGreyscaleWritable(normalizeThoseDoubles(srgbEuclidean));
-        int[][] oklabEuclideanSubpixels = pixelsToGreyscaleWritable(normalizeThoseDoubles(oklabEuclidean));
+        int[][] srgbEuclideanSubpixels = pixelsToGreyscaleWritable(normalizeEuclideanDoubles(srgbEuclidean));
+        int[][] oklabEuclideanSubpixels = pixelsToGreyscaleWritable(normalizeEuclideanDoubles(oklabEuclidean));
 
         PngWriter outputEuclideanLab = new PngWriter(new File ("euclideanOklab.png"), new PngReader(f1).imgInfo);
         IOMethods.writeAllRows(oklabEuclideanSubpixels,outputEuclideanLab);
@@ -60,16 +60,7 @@ public class Main {
 
     }
 
-    public static int[][] normalizeThoseDoubles (double[][] input) {
-        int[][] normalized = new int[input.length][input[0].length];
-        double slope = 65535.0 / 113509.949674;
-        for (int r = 0; r < input.length; r++) {
-            for (int c = 0; c < input[0].length; c++) {
-                normalized[r][c] = (int) Math.round(input[r][c] * slope);
-            }
-        }
-        return normalized;
-    }
+
 
     public static int[][] pixelsToGreyscaleWritable (int[][] pixels){
         int[][] subpixels = new int[pixels.length][pixels[0].length * 3];
@@ -138,6 +129,18 @@ public class Main {
             }
         }
         return wereThereAnyZeroes;
+    }
+
+    // Normalize 16 bit single value doubles so they can be written to an image
+    public static int[][] normalizeEuclideanDoubles(double[][] input) {
+        int[][] normalized = new int[input.length][input[0].length];
+        double slope = 65535.0 / 113509.949674; //133509 = largest distance (65535,65535,65535) -> (0,0,0)
+        for (int r = 0; r < input.length; r++) {
+            for (int c = 0; c < input[0].length; c++) {
+                normalized[r][c] = (int) Math.round(input[r][c] * slope);
+            }
+        }
+        return normalized;
     }
 
     //TODO delete, but maybe document why it didn't work first
