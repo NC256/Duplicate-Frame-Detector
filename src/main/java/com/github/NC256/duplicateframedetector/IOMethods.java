@@ -1,4 +1,4 @@
-package com.github.NC256.duplicateimagetest;
+package com.github.NC256.duplicateframedetector;
 
 import ar.com.hjg.pngj.IImageLine;
 import ar.com.hjg.pngj.IImageLineSet;

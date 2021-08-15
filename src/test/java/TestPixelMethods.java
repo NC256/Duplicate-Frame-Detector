@@ -1,13 +1,12 @@
-import com.github.NC256.duplicateimagetest.PixelMethods;
+import com.github.NC256.duplicateframedetector.PixelMethods;
 import org.junit.jupiter.api.Test;
-import static com.github.NC256.duplicateimagetest.PixelMethods.IntPixel;
-import static com.github.NC256.duplicateimagetest.PixelMethods.FloatingPixel;
+import static com.github.NC256.duplicateframedetector.PixelMethods.IntPixel;
 
 import java.util.Arrays;
 
-import static com.github.NC256.duplicateimagetest.PixelMethods.absSubpixelDiff;
-import static com.github.NC256.duplicateimagetest.PixelMethods.euclideanPixelDistance;
-import static com.github.NC256.duplicateimagetest.PixelMethods.sRGBToOklabPixelConversion;
+import static com.github.NC256.duplicateframedetector.PixelMethods.absSubpixelDiff;
+import static com.github.NC256.duplicateframedetector.PixelMethods.euclideanPixelDistance;
+import static com.github.NC256.duplicateframedetector.PixelMethods.sRGBToOklabPixelConversion;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
