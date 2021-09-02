@@ -1,8 +1,37 @@
 # What is this?
 
-This is the result of an experimental attempt to detect duplicate frames in some 2D animation video files I had. Unfortunately, it does not work (yet?).
+My goal was to detect exact-duplicate frames in some 2D animation footage. When I started this project I had no idea if this goal was reasonable or not (turns out it is a lot harder than I expected, this codebase hasn't achieved that goal yet).
 
-Every existing solution I found was based on a "similarity" measurement, which is useful for live action footage which is inherently filled with sensor noise, but isn't very precise. I thought it would be easier to create a more exact solution for 2D animation, which has much simpler visuals.
+## The Setting
+
+My initial assumptions:
+   1. Subsequent frames with no visually noticeable difference would have identical or nearly-identical digital pixel values.
+   2. Because I was working with simple 2D animation, subsequent frames wouldn't have any sensor noise, and would be easily detectable.
+   3. Calculating the "difference" between two frames was a straightforward concept.
+
+Some limitations:
+   1. I would work with the frames extracted into individuals images instead of inside the codec (H.264) for simplicity reasons.
+   2. I didn't want to use any AI or neural networks as they would never offer a 100% confidence rating (and there seemed to be value in having a definite algorithm).
+   3. I wasn't using existing image comparison techniques ([perceptual hashes](https://en.wikipedia.org/wiki/Perceptual_hashing)) as they were also based on fuzzy comparisons.
+
+## The Setup
+
+The H.264 video I had on hand was encoded as YUV with 4:2:0 subsampling. 
+
+I initially looked for an image format that supported YUV so I didn't have to lose anything to the color conversion process, but sadly none of the popular formats were suitable. WebP is the only one with YUV support, but only in [lossy encoding mode](https://developers.google.com/speed/webp/faq#what_color_spaces_does_the_webp_format_support). 
+
+I then spent some time trying to find a lossless conversion method between YUV and RGB. The results were mixed, confusing, and I found indications that there are multiple *different* equations used in the process. 
+
+I ran an experiment with FFmpeg where I extracted a frame as raw YUV, converted it to PNG, back to YUV, back to PNG, rinse repeat. Degredation was noticeable after a dozen or so
+
+Through manual testing I found that using `-sws_flags +accurate_rnd+full_chroma_int` on FFmpeg during the extraction process led 
+
+In the end I settled on PNG with 16 bits per channel with the hope that expanding to a bigger bit depth would reduce round-off errors in the conversion process.
+
+
+
+
+
 
 It ended up being a long journey into pixel formats, colorspaces, and the fundamental details of digital color representation. It's a lot more complex than I ever realized and a frequently misunderstood topic, which made finding accurate, specific, and useful documentation difficult. The journey was also filled with H.264 quantization noise, but more on that later.
 
@@ -24,7 +53,7 @@ You sound like me when I started this project!
 
 My original premise was that `there would be no difference between two subsequent frames where no noticeable visual changes take place`. Definitely untrue for live action footage due to [sensor noise](https://en.wikipedia.org/wiki/Image_noise#In_digital_cameras). But animated content doesn't use a real camera. It's also ideal because there are many frames where nothing moves. Static shots, animation drawn to [not update every frame](https://en.wikipedia.org/wiki/Inbetweening#Frame_frequency), and simple visuals gave me hope that I could precisely detect duplicate frames.
 
-I looked for existing software to do this task. And it exists, but nothing promised to truly detect duplicates. It only promised to detect frames that [do not differ greatly](https://ffmpeg.org/ffmpeg-filters.html#mpdecimate) from the previous frame. There were also some image-based solutions that worked based on [perceptual hasing](https://en.wikipedia.org/wiki/Perceptual_hashing) which is itself based on similarity. At this point I didn't understand why every algorithm was designed to do fuzzy comparisons.
+I looked for existing software to do this task. And it exists, but nothing promised to truly detect duplicates. It only promised to detect frames that [do not differ greatly](https://ffmpeg.org/ffmpeg-filters.html#mpdecimate) from the previous frame. There were also some image-based solutions that worked based on [perceptual hashing](https://en.wikipedia.org/wiki/Perceptual_hashing) which is itself based on similarity. At this point I didn't understand why every algorithm was designed to do fuzzy comparisons.
 
 The first problem was getting access to the video data. I couldn't think of a good reason to spend the extra effort parsing the raw H.264 data myself so I settled for extracting the frames with FFmpeg, which is basically the swiss army knife for video file manipulation.
 
