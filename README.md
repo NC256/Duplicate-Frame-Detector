@@ -22,9 +22,14 @@ I initially looked for an image format that supported YUV so I didn't have to lo
 
 I then spent some time trying to find a lossless conversion method between YUV and RGB. The results were mixed, confusing, and I found indications that there are multiple *different* equations used in the process. 
 
-I ran an experiment with FFmpeg where I extracted a frame as raw YUV, converted it to PNG, back to YUV, back to PNG, rinse repeat. Degredation was noticeable after a dozen or so
+I ran an experiment with FFmpeg where I extracted a frame as raw YUV, converted it to PNG, back to YUV, back to PNG, rinse repeat.
+Here's a crop of the source image:
+![A small crop of a larger image, taken from the source material](./readmeImages/croppedConversionOriginal.PNG)
 
-Through manual testing I found that using `-sws_flags +accurate_rnd+full_chroma_int` on FFmpeg during the extraction process led 
+Here's what it looked like after being converted between PNG and raw YUV a thousand times over (steady state was reached around 650)
+![The same crop as the previous image, but after 1000 conversions](./readmeImages/croppedConversion1000.PNG)
+
+Through manual testing I found that using `-sws_flags +accurate_rnd+full_chroma_int` on FFmpeg during the conversion process resolved this issue. It still introduced minor noise, but reached steady state after a small number of conversions and more importantly, still looked visually equivaelent to the source.
 
 In the end I settled on PNG with 16 bits per channel with the hope that expanding to a bigger bit depth would reduce round-off errors in the conversion process.
 
