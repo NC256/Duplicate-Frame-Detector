@@ -24,10 +24,10 @@ I then spent some time trying to find a lossless conversion method between YUV a
 
 I ran an experiment with FFmpeg where I extracted a frame as raw YUV, converted it to PNG, back to YUV, back to PNG, rinse repeat.
 Here's a crop of the source image:
-![A small crop of a larger image, taken from the source material](./readmeImages/croppedConversionOriginal.PNG)
+![A small crop of a larger image, taken from the source material](./readmeImages/croppedConversionOriginal.png)
 
 Here's what it looked like after being converted between PNG and raw YUV a thousand times over (steady state was reached around 650)
-![The same crop as the previous image, but after 1000 conversions](./readmeImages/croppedConversion1000.PNG)
+![The same crop as the previous image, but after 1000 conversions](./readmeImages/croppedConversion1000.png)
 
 Through manual testing I found that using `-sws_flags +accurate_rnd+full_chroma_int` on FFmpeg during the conversion process resolved this issue. It still introduced minor noise, but reached steady state after a small number of conversions and more importantly, still looked visually equivaelent to the source.
 
