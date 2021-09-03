@@ -31,16 +31,53 @@ Here's what it looked like after being converted between PNG and raw YUV a thous
 
 ![The same crop as the previous image, but after 1000 conversions](./readmeImages/croppedConversion1000.png)
 
-Through manual testing I found that using `-sws_flags +accurate_rnd+full_chroma_int` on FFmpeg during the conversion process resolved this issue. Though (the [docs](https://ffmpeg.org/ffmpeg-scaler.html#toc-Scaler-Options) are not clear on what *exactly* the flags do. It still introduced minor noise, but reached steady state after a small number of conversions and more importantly, still looked visually equivaelent to the source. In the end I settled on PNG with 16 bits per channel with the hope that expanding to a bigger bit depth would reduce round-off errors in the conversion process.
+Through manual testing I found that using `-sws_flags +accurate_rnd+full_chroma_int` on FFmpeg during the conversion process resolved this issue (the [docs](https://ffmpeg.org/ffmpeg-scaler.html#toc-Scaler-Options) are not clear on what *exactly* these flags do). Though it still introduced minor noise, it reached steady state after a small number of conversions and more importantly, still looked visually equivaelent to the source. In the end I settled on PNG with 16 bits per channel with the hope that expanding to a bigger bit depth would reduce round-off errors in the conversion process.
 
 
-# Attempt #1
+# Attempt #1 - What is color anyway?
+
+I decided to compare frames pixel-wise. So I take some pixel in frame 1, and compare it to the same pixel in frame 2. And I calculate the difference between each color channel. If you do this for every pixel you can actually generate a new picture, a "difference frame" if you will. If you load two images into a program like Gimp or Photoshop and set the layer blending mode to "difference" you can perfectly replicate what I'm describing. The image will be solid black anywhere the colors have not changed, otherwise it'll light up (depending on how "far apart" the color values of the pixels were from each other).
+
+It was at this point I discovered that assumption #1's and 2 were incorrect. Even on frames that looked visually identical, frames I'm almost certain that the original artists simply duplicated for timing reasons, the color values are not identical.
+
+Here's a cropped excerpt image of two identical looking frames overlaid in Gimp 2.10.20r1, blended with difference mode and merged down into one, then the exposure cranked way up:
+![H.264 quantization noise, I think](./readmeImages/pic1.PNG)
+
+I'm pretty sure I'm looking at H.264 encoder/quantization noise (if you know what I'm looking at here, please let me know!). My source was a blu-ray disc, so I can't imagine it was too many steps away from a high bitrate source, but it dashed my hopes of perfect frame duplication.
+
+
+# Attempt #2 - Maybe this is salvagable.
+
+Okay so duplicate looking frames weren't actually duplicate, but they were pretty close. Maybe I could still detect duplicates by introducing a tolerance rating. When I would examine individual pixels in subsequent frames they would often differ by only 1-3%. So I began to examine lots of pairs of frames.
+
+Here's the percent differences in pixel colors for two identical looking frames. There are ~400,000 pixels that don't match values perfectly between frames, but only 4 pixels manage to deviate more than 5%
+```
+>0% diff, >1% , >2% , 3% , 4%, etc 
+[401955, 21552, 1897, 191, 21, 4, 1, 0, 0, 0,...]
+```
+Here's the difference values for two frames where some tiny objects disappear in the background, resulting in a small number of pixels having a sizable change. A handful of pixels are more than 90% different from their values on the prior frame.
+```
+[925395, 113369, 13884, 3415, 2142, 1883, 1792, 1744, 1678, 1623, 1571, 1535, 1489, 1453, 1415, 1365, 1320, 1273, 1224, 1194, 1162, 1128, 1092, 1063, 1039, 1013, 995, 967, 952, 926, 907, 884, 857, 838, 828, 819, 809, 790, 772, 759, 753, 739, 732, 722, 717, 711, 707, 706, 697, 689, 683, 678, 673, 667, 660, 651, 642, 635, 629, 619, 610, 596, 582, 572, 567, 558, 549, 540, 532, 527, 516, 510, 497, 486, 476, 467, 460, 453, 444, 434, 422, 406, 389, 363, 327, 278, 225, 180, 135, 96, 64, 43, 19, 8, 6, 2, 0, 0, 0, 0]
+```
+So far so good, all I need to do is choose the right tolerances. What % of pixels at % difference will qualify two frames as "different"? What % will qualify them as "the same"? I began to run some tests on the entire set of frames...and quickly discovered a problem.
+
+Here's the values for two frames that have subtle differences but are definitely visually distinct.
+```
+[1270464, 595110, 351411, 206595, 131779, 28208, 4108, 571, 64, 12, 0, 0, 0,...]
+```
+I discovered that the presense of any gradient-like changes in the animation (such as something beginning to glow or a cloud of gas dissipating in the air) would result in a long string of frames where uniform subtle differences would occur. I was unable to find tolerances that were sensitive enough to detect these gradiential sections without resulting in a huge number of identical frames being marked as different.
+
+# Attempt #3 - Now what?
+
+
+
 
 
 
 
 
 It ended up being a long journey into pixel formats, colorspaces, and the fundamental details of digital color representation. It's a lot more complex than I ever realized and a frequently misunderstood topic, which made finding accurate, specific, and useful documentation difficult. The journey was also filled with H.264 quantization noise, but more on that later.
+
 
 # What approaches have I tried?
 
