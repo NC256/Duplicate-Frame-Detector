@@ -1,12 +1,12 @@
 # What is this?
 
-My goal was to detect exact-duplicate frames in some 2D animation footage. When I started this project I had no idea if this goal was reasonable or not (turns out it is a lot harder than I expected, this codebase hasn't achieved that goal yet).
+My goal was to detect exact-duplicate frames in some 2D animation footage. When I started this project I had no idea if this goal was reasonable or not (turns out it is a lot harder than I expected, this codebase hasn't achieved its goal yet).
 
 ## The Setting
 
 My initial assumptions:
    1. Subsequent frames with no visually noticeable difference would have identical or nearly-identical digital pixel values.
-   2. Because I was working with simple 2D animation, subsequent frames wouldn't have any sensor noise, and would be easily detectable.
+   2. Because I was working with simple 2D animation, subsequent frames wouldn't have any sensor noise, and would be easily detectable even if not exact digital duplicates.
    3. Calculating the "difference" between two frames was a straightforward concept.
 
 Some limitations:
@@ -18,7 +18,7 @@ Some limitations:
 
 The H.264 video I had on hand was encoded as YUV with 4:2:0 subsampling. 
 
-I initially looked for an image format that supported YUV so I didn't have to lose anything to the color conversion process, but sadly none of the popular formats were suitable. WebP is the only one with YUV support, but only in [lossy encoding mode](https://developers.google.com/speed/webp/faq#what_color_spaces_does_the_webp_format_support). 
+I initially looked for an image format that supported YUV so I didn't have to lose anything to the color conversion process, but sadly none of the popular file formats were suitable. WebP had YUV support, but only in [lossy encoding mode](https://developers.google.com/speed/webp/faq#what_color_spaces_does_the_webp_format_support). Tiff also had support, but in an extension to the spec (and some image editing programs had trouble opening it, I suspect support for more than [baseline](https://en.wikipedia.org/wiki/TIFF#Part_1:_Baseline_TIFF) is spotty).
 
 I then spent some time trying to find a lossless conversion method between YUV and RGB. The results were mixed, confusing, and I found indications that there are multiple *different* equations used in the process. 
 
@@ -52,7 +52,7 @@ Okay so duplicate looking frames weren't actually duplicate, but they were prett
 
 Here's the percent differences in pixel colors for two identical looking frames. There are ~400,000 pixels that don't match values perfectly between frames, but only 4 pixels manage to deviate more than 5%
 ```
->0% diff, >1% , >2% , 3% , 4%, etc 
+>0% diff, >1% , >2% , etc 
 [401955, 21552, 1897, 191, 21, 4, 1, 0, 0, 0,...]
 ```
 Here's the difference values for two frames where some tiny objects disappear in the background, resulting in a small number of pixels having a sizable change. A handful of pixels are more than 90% different from their values on the prior frame.
@@ -65,9 +65,39 @@ Here's the values for two frames that have subtle differences but are definitely
 ```
 [1270464, 595110, 351411, 206595, 131779, 28208, 4108, 571, 64, 12, 0, 0, 0,...]
 ```
-I discovered that the presense of any gradient-like changes in the animation (such as something beginning to glow or a cloud of gas dissipating in the air) would result in a long string of frames where uniform subtle differences would occur. I was unable to find tolerances that were sensitive enough to detect these gradiential sections without resulting in a huge number of identical frames being marked as different.
+I discovered that the presense of any gradient-like changes in the animation (such as something beginning to glow or a cloud of gas dissipating in the air) would result in a long string of frames where uniform subtle differences would occur. I was unable to find tolerances that were sensitive enough to detect these gradiential sections without resulting in a huge number of identical frames being marked as distinct.
 
-# Attempt #3 - Now what?
+# Attempt #3 - Back to fundamentals
+
+In hitting the walls described above I began to fall down the rabbit hole of, "What is color, how has it been digitalized, and how are different representations distinct?". I thought color was simple but turns out you could write an entire book in answer to those questions.
+
+### Color is really really really complicated (and confusing)
+
+I want to emphasize this as it's probably the most important thing I've learned. Our digital color representations trace directly back to some really messy and hard to quantify things, like the physics of light, the biology of our eyes and brains, and psychological interferences, like how we perceive patterns and are easily tricked by visual illusions. I think I always thought of digital color as really simple. There was red, green, and blue, and they would slide around from 0 to 255. But when I began to dig into the topic it was almost overwhelming. As far as I can tell, we've been trying really hard for over a hundred years to try and capture "human color perception" inside of a bunch of equations (and we've  experienced mixed results).
+
+And also the field is really confusing. Even when I finally found experts discussing the topic, they have to devote considerable time to fighting misconceptions surrounding terminology.
+
+### Charles Poynton has a goldmine of articles on the topic
+
+I was drowning in confusing terminology on Wikipedia and Stackoverflow until I finally stumbled across Charles Poynton's website: http://www.poynton.ca/
+
+He has several links on his site about color, gamma, and video engineering. I found them to be highly relevant and very precise.
+
+### Things are often not linear
+
+Here's an example of something complicated *and* confusing (and highly relevant to the problem I was trying to solve). Human "brightness" perception is nonlinear (think about the difference between pure darkness, lighting a single candle, and then lighting a second candle, is the change from 1 candle to 2 as big as the change from 0 to 1? How about the difference between 99 candles and 100?). So when we got around to packing light into 256 integer values some people realized it would be more efficient if we didn't store things linearly (enter stage left, "gamma transfer functions"). What this means that the bits in an image file might not be linearly related to how bright your computer monitor should light itself up when displaying that image. Take a peek at this article where Dr. Poynton answers a bunch of questions surrounding the concept of gamma (especially question 5): http://www.poynton.ca/PDFs/GammaFAQ.pdf
+
+Think about what this nonlinearity might mean when you're trying to calculate a "difference" between two given pixels buy just directly cracking open a PNG and comparing values.
+
+
+# Attempt #4 - A new approach
+
+I want to talk for a second about my third assumption. The one where I said that "comparing" two colors was a straightforward concept. Turns out, it's really not. And the way I was going about it (the absolute difference of individual RGB values in a PNG file) is really really not the way to go.
+
+I have now realized that what I really wanted was to calculate the *perceptual* difference between two frames, pixels, or colors. What I really wanted was a LAB colorspace, which, according to Wikipedia, are designed to be *perceptually uniform*. RGB representations are, as far as I can tell, not suitable for this goal. 
+
+
+# Where to go next?
 
 
 
@@ -75,37 +105,4 @@ I discovered that the presense of any gradient-like changes in the animation (su
 
 
 
-
-It ended up being a long journey into pixel formats, colorspaces, and the fundamental details of digital color representation. It's a lot more complex than I ever realized and a frequently misunderstood topic, which made finding accurate, specific, and useful documentation difficult. The journey was also filled with H.264 quantization noise, but more on that later.
-
-
-# What approaches have I tried?
-
-First I extract all the frames into 48-bit RGB PNG files using FFmpeg using its `-sws_flags +accurate_rnd+full_chroma_int` arguments to get better color conversion (the [docs](https://ffmpeg.org/ffmpeg-scaler.html#toc-Scaler-Options) are not very specific about what these flags do but my own testing showed they led to less [generation loss](https://en.wikipedia.org/wiki/Generation_loss) over repeated conversions.
-
-1. For every RGB subpixel value in two subsequent frames, compute `abs(subpixel1 - subpixel2)` and generate a "difference frame" from all these computations (this is generally equivalent to putting two images in an editing program and setting the blending mode to "difference"). I would then take the difference frame and find the intensity percentage of every subpixel value and tally them up in a spreadsheet.
-   1. Unfortunately two frames that appeared visually identical, when compared pixel by pixel, would usually have small changes in exact color value.
-   2. Here's an excerpt image of two identical looking frames overlaid in Gimp 2.10.20r1, blended with difference mode and merged down into one, then the exposure cranked way up: ![H.264 quantization noise, I think](./readmeImages/pic1.PNG) I'm fairly certain this is H.264 quantization patterns and noise (especially the blue and orange patterns), only so clearly seen because the encoder input was so similar, but if anyone has better explanation, please let me know!
-2. Part 2
-
-
-# Story of this project
-
-## Duplicate frames in animated content? Sounds easy.
-
-You sound like me when I started this project!
-
-My original premise was that `there would be no difference between two subsequent frames where no noticeable visual changes take place`. Definitely untrue for live action footage due to [sensor noise](https://en.wikipedia.org/wiki/Image_noise#In_digital_cameras). But animated content doesn't use a real camera. It's also ideal because there are many frames where nothing moves. Static shots, animation drawn to [not update every frame](https://en.wikipedia.org/wiki/Inbetweening#Frame_frequency), and simple visuals gave me hope that I could precisely detect duplicate frames.
-
-I looked for existing software to do this task. And it exists, but nothing promised to truly detect duplicates. It only promised to detect frames that [do not differ greatly](https://ffmpeg.org/ffmpeg-filters.html#mpdecimate) from the previous frame. There were also some image-based solutions that worked based on [perceptual hashing](https://en.wikipedia.org/wiki/Perceptual_hashing) which is itself based on similarity. At this point I didn't understand why every algorithm was designed to do fuzzy comparisons.
-
-The first problem was getting access to the video data. I couldn't think of a good reason to spend the extra effort parsing the raw H.264 data myself so I settled for extracting the frames with FFmpeg, which is basically the swiss army knife for video file manipulation.
-
-### But what image format to extract to?
-
-FFprobe (FFmpeg's sibling that does video file analysis) tells me that my video is "yuv420p".
-
-I'm used to thinking of RGB `(red intensity, green intensity, blue intensity)`, but YUV is `(luminance intensity, blue difference, red difference)`. The "420" references to 4:2:0 [chroma subsampling](https://en.wikipedia.org/wiki/Chroma_subsampling). Color scientists figured out a long time ago that human eyes are more sensitive to changes in brightness/intensity/luminance than they are sensitive to changes in color. So somebody smartly decided that while storing that beautiful 1080p video footage, they should store the Y' luma channel in full resolution, but store the U and V color channels in a lower resolution, thereby saving a lot of bits. And turns out, you can barely tell a difference.
-
-Now one of the great tragedies of digital video is that you lose some data almost every time you have to convert or encode something. There's too many reasons why this happens to explain them all, but the general rule of thumb is that you want to do a few conversions as possible in order to preserve quality.
 
