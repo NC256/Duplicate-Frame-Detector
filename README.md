@@ -102,7 +102,16 @@ I'm relatively certain I got the code working correctly in the end. I went to to
 
 # Where to go next?
 
+I have lots of ideas still to try but I'm not as confident that any of them will work as I was when I started this project. Different color spaces, implementing proper ΔE equations, finding a different comparison metric, all of these things might make a difference. Then again, maybe it would be better to work with the H.264 data, anaylze the inter prediction motion vectors directly to see when pixels move. 
 
+I've sunk so many hours into this project that I need to move on to other things. I have come away with a new appreciation of the complexity in this area of computing. I do want to revisit this project in the future, preferably after I've had time to dig into a couple textbooks on the topic.
+
+
+
+
+
+
+# Addendum on SIMD
 
 
 
