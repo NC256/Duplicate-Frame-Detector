@@ -20,7 +20,7 @@ The H.264 video I had on hand was encoded as YUV with 4:2:0 subsampling.
 
 I initially looked for an image format that supported YUV so I didn't have to lose anything to the color conversion process, but sadly none of the popular file formats were suitable. WebP had YUV support, but only in [lossy encoding mode](https://developers.google.com/speed/webp/faq#what_color_spaces_does_the_webp_format_support). Tiff also had support, but in an extension to the spec (and some image editing programs had trouble opening it, I suspect support for more than [baseline](https://en.wikipedia.org/wiki/TIFF#Part_1:_Baseline_TIFF) is spotty).
 
-I then spent some time trying to find a lossless conversion method between YUV and RGB. The results were mixed, confusing, and I found indications that there are multiple *different* equations used in the process. 
+I then spent some time trying to find a lossless conversion method between YUV and RGB. The results were mixed, confusing, and I found indications that the exact math used can differ from implementation to implementation. 
 
 I ran an experiment with FFmpeg where I extracted a frame as raw YUV, converted it to PNG, back to YUV, back to PNG, rinse repeat.
 Here's a crop of the source image:
@@ -31,7 +31,7 @@ Here's what it looked like after being converted between PNG and raw YUV a thous
 
 ![The same crop as the previous image, but after 1000 conversions](./readmeImages/croppedConversion1000.png)
 
-Through manual testing I found that using `-sws_flags +accurate_rnd+full_chroma_int` on FFmpeg during the conversion process resolved this issue (the [docs](https://ffmpeg.org/ffmpeg-scaler.html#toc-Scaler-Options) are not clear on what *exactly* these flags do). Though it still introduced minor noise, it reached steady state after a small number of conversions and more importantly, still looked visually equivaelent to the source. In the end I settled on PNG with 16 bits per channel with the hope that expanding to a bigger bit depth would reduce round-off errors in the conversion process.
+Through manual testing I found that using `-sws_flags +accurate_rnd+full_chroma_int` on FFmpeg during the conversion process resolved this issue (the [docs](https://ffmpeg.org/ffmpeg-scaler.html#toc-Scaler-Options) are not clear on what *exactly* these flags do). Though it still introduced minor alterations it reached steady state after a small number of conversions and more importantly, still looked visually equivaelent to the source. In the end I settled on PNG with 16 bits per channel with the hope that expanding to a bigger bit depth would reduce round-off errors in the conversion process.
 
 
 # Attempt #1 - What is color anyway?
@@ -94,8 +94,11 @@ Think about what this nonlinearity might mean when you're trying to calculate a 
 
 I want to talk for a second about my third assumption. The one where I said that "comparing" two colors was a straightforward concept. Turns out, it's really not. And the way I was going about it (the absolute difference of individual RGB values in a PNG file) is really really not the way to go.
 
-I have now realized that what I really wanted was to calculate the *perceptual* difference between two frames, pixels, or colors. What I really wanted was a LAB colorspace, which, according to Wikipedia, are designed to be *perceptually uniform*. RGB representations are, as far as I can tell, not suitable for this goal. 
+I have now realized that what I really wanted was to calculate the *perceptual* difference between two frames, pixels, or colors. What I really wanted was a LAB colorspace, which, according to Wikipedia, are designed to be *perceptually uniform*. RGB representations are, as far as I can tell, not suitable for this goal. The CIELAB equations looked [tenuous](https://en.wikipedia.org/wiki/Color_difference#CIEDE2000) to calculate, so I decided to go with [Oklab](https://bottosson.github.io/posts/oklab/#the-oklab-color-space), which came with it's [own conversion code](https://bottosson.github.io/posts/oklab/#the-oklab-color-space). 
 
+Making sure my code was working properly here was difficult to try and verify. I had to normalize my color values to 0..1 to put them through the code, and then I would get back out floating point values. And Lab colorspaces don't seem to have limits? [Wikipedia](https://en.wikipedia.org/wiki/CIELAB_color_space) tells me that the `L` is bounded but the `a` and `b` are not. I "denormalized" them back into the 16 bit space I was working with, though as I write this now I'm not even sure that was the correct idea. In order to see any of the results I was getting I needed to put the color data back into a PNG. Which doesn't make a ton of sense, since the rendering pipeline on my computer has no idea the values are in the new colorspace.
+
+I'm relatively certain I got the code working correctly in the end. I went to town with my new color values, started calculating differences, tallying them into spreadsheets...and sadly I ran into all the same problems I had in attempt #2.
 
 # Where to go next?
 
