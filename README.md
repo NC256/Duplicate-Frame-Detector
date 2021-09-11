@@ -96,7 +96,7 @@ I want to talk for a second about my third assumption. The one where I said that
 
 I have now realized that what I really wanted was to calculate the *perceptual* difference between two frames, pixels, or colors. What I really wanted was a LAB colorspace, which, according to Wikipedia, are designed to be *perceptually uniform*. RGB representations are, as far as I can tell, not suitable for this goal. The CIELAB equations looked [tenuous](https://en.wikipedia.org/wiki/Color_difference#CIEDE2000) to calculate, so I decided to go with [Oklab](https://bottosson.github.io/posts/oklab/#the-oklab-color-space), which came with it's [own conversion code](https://bottosson.github.io/posts/oklab/#the-oklab-color-space). 
 
-Making sure my code was working properly here was difficult to try and verify. I had to normalize my color values to 0..1 to put them through the code, and then I would get back out floating point values. And Lab colorspaces don't seem to have limits? [Wikipedia](https://en.wikipedia.org/wiki/CIELAB_color_space) tells me that the `L` is bounded but the `a` and `b` are not. I "denormalized" them back into the 16 bit space I was working with, though as I write this now I'm not even sure that was the correct idea. In order to see any of the results I was getting I needed to put the color data back into a PNG. Which doesn't make a ton of sense, since the rendering pipeline on my computer has no idea the values are in the new colorspace.
+Making sure my code was working properly here was difficult to try and verify. I had to normalize my color values to 0...1 to put them through the code, and then I would get back out floating point values. And Lab colorspaces don't seem to have limits? [Wikipedia](https://en.wikipedia.org/wiki/CIELAB_color_space) tells me that the `L` is bounded but the `a` and `b` are not. I "denormalized" them back into the 16 bit space I was working with, though as I write this now I'm not even sure that was the correct idea. In order to see any of the results I was getting I needed to put the color data back into a PNG. Which doesn't make a ton of sense, since the rendering pipeline on my computer has no idea the values are in the new colorspace.
 
 I'm relatively certain I got the code working correctly in the end. I went to town with my new color values, started calculating differences, tallying them into spreadsheets...and sadly I ran into all the same problems I had in attempt #2.
 
@@ -106,13 +106,16 @@ I have lots of ideas still to try but I'm not as confident that any of them will
 
 I've sunk so many hours into this project that I need to move on to other things. I have come away with a new appreciation of the complexity in this area of computing. I do want to revisit this project in the future, preferably after I've had time to dig into a couple textbooks on the topic.
 
+&nbsp;
 
+&nbsp;
 
+&nbsp;
 
-
+&nbsp;
 
 # Addendum on SIMD
-
+Java is not usually the language people reach for when they need to do image manipulation
 
 
 
