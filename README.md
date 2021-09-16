@@ -36,7 +36,7 @@ Through manual testing, I found that using `-sws_flags +accurate_rnd+full_chroma
 
 # Attempt #1 - What is color anyway?
 
-I decided to compare frames pixel-wise. So I take some pixel in frame 1 and compare it to the same pixel in frame 2. And I calculate the difference between each color channel. If you do this for every pixel you can generate a new picture, a "difference frame" if you will. If you load two images into a program like Gimp or Photoshop and set the layer blending mode to "difference" you can perfectly replicate what I'm describing. The image will be solid black anywhere the colors have not changed, otherwise it'll light up (depending on how "far apart" the color values of the pixels were from each other).
+I decided to compare frames pixel-wise. So I go pixel by pixel in frame 1 and compare each to their corresponding partner in frame 2. And I calculate the absolute difference between each pixel's color channel values. If you do this for every pixel you can generate a new picture, a "difference frame" if you will. If you load two images into a program like Gimp or Photoshop and set the layer blending mode to "difference" you can perfectly replicate what I'm describing. The image will be solid black anywhere the colors have not changed, otherwise it'll light up (depending on how "far apart" the color values of the pixels were from each other).
 
 It was at this point I discovered that assumption #1's and 2 were incorrect. Even on frames that looked visually identical, frames I'm almost certain that the original artists simply duplicated for timing reasons, the color values are not identical.
 
