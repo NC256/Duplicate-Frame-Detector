@@ -59,7 +59,7 @@ Here are the difference values for two frames where some tiny objects disappear 
 ```
 [925395, 113369, 13884, 3415, 2142, 1883, 1792, 1744, 1678, 1623, 1571, 1535, 1489, 1453, 1415, 1365, 1320, 1273, 1224, 1194, 1162, 1128, 1092, 1063, 1039, 1013, 995, 967, 952, 926, 907, 884, 857, 838, 828, 819, 809, 790, 772, 759, 753, 739, 732, 722, 717, 711, 707, 706, 697, 689, 683, 678, 673, 667, 660, 651, 642, 635, 629, 619, 610, 596, 582, 572, 567, 558, 549, 540, 532, 527, 516, 510, 497, 486, 476, 467, 460, 453, 444, 434, 422, 406, 389, 363, 327, 278, 225, 180, 135, 96, 64, 43, 19, 8, 6, 2, 0, 0, 0, 0]
 ```
-So far so good, all I need to do is choose the right tolerances. What % of pixels at % difference will qualify two frames as "different"? What % will qualify them as "the same"? I began to run some tests on the entire set of frames...and quickly discovered a problem.
+So far so good, all I need to do is choose the right tolerances. What % of pixels at what % difference will qualify two frames as "different"? What % will qualify them as "the same"? I began to run some tests on the entire set of frames...and quickly discovered a problem.
 
 Here are the values for two frames that have subtle differences but are visually distinct.
 ```
